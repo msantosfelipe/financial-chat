@@ -14,7 +14,8 @@ $(function () {
 
             websocket.addEventListener("message", function (e) {
                 let data = JSON.parse(e.data);
-                let chatContent = `<p><strong>${data.username}</strong>: ${data.text}</p>`;
+                let chatContent = `<p><strong>${data.timestamp} - ${data.username}</strong>: ${data.text}</p>`;
+                console.log(chatContent)
                 chatText.append(chatContent);
                 chatText.scrollTop = chatText.scrollHeight;
             });

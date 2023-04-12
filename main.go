@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -15,9 +17,10 @@ import (
 )
 
 type ChatMessage struct {
-	Username string `json:"username"`
-	Text     string `json:"text"`
-	Room     string `json:"room"`
+	Username  string `json:"username"`
+	Text      string `json:"text"`
+	Timestamp string `json:"timestamp"`
+	Room      string `json:"room"`
 }
 
 var (
@@ -72,6 +75,7 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		msg.Room = room
+		msg.Timestamp = time.Now().Format("2006-01-02 15:04:05")
 		// send new message to the channel
 		broadcaster <- msg
 	}
@@ -134,7 +138,6 @@ func messageClient(client *websocket.Conn, msg ChatMessage) {
 		log.Printf("error: %v", err)
 		client.Close()
 		delete(clientsByRoom[msg.Room], client)
-
 	}
 }
 
@@ -160,6 +163,7 @@ func main() {
 
 	log.Print("Server starting at localhost:" + port)
 
+	go listenForShutdown()
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
@@ -171,4 +175,15 @@ func initRedis() {
 	rdb = redis.NewClient(&redis.Options{
 		Addr: redisURL,
 	})
+}
+
+func listenForShutdown() {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	fmt.Println("would run cleanup tasks...")
+	close(broadcaster)
+	fmt.Println("closing channels and shutting down application...")
+	os.Exit(0)
 }
