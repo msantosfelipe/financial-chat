@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-redis/redis"
 	"github.com/gorilla/websocket"
@@ -16,13 +17,15 @@ import (
 type ChatMessage struct {
 	Username string `json:"username"`
 	Text     string `json:"text"`
+	Room     string `json:"room"`
 }
 
 var (
-	rdb *redis.Client
+	rdb                *redis.Client
+	chatExpirationTime = 60 * time.Minute
 )
 
-var clients = make(map[*websocket.Conn]bool)
+var clientsByRoom = make(map[string]map[*websocket.Conn]bool)
 var broadcaster = make(chan ChatMessage)
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -31,18 +34,32 @@ var upgrader = websocket.Upgrader{
 }
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("foi")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	room := r.URL.Query().Get("room")
+	if room == "" {
+		log.Printf("Room not specified")
+		return
+	}
+
+	fmt.Println("Starting new connection on room:", room)
+
+	clientsInTheRoom := clientsByRoom[room]
+	if clientsInTheRoom == nil {
+		clientsInTheRoom = make(map[*websocket.Conn]bool)
+	}
+	clientsInTheRoom[ws] = true
+
 	// ensure connection close when function returns
 	defer ws.Close()
-	clients[ws] = true
+	clientsByRoom[room] = clientsInTheRoom
 
 	// if it's zero, no messages were ever sent/saved
-	if rdb.Exists("chat_messages").Val() != 0 {
-		sendPreviousMessages(ws)
+	if rdb.Exists("chat_messages:"+room).Val() != 0 {
+		sendPreviousMessages(ws, room)
 	}
 
 	for {
@@ -50,16 +67,18 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		// Read in a new message as JSON and map it to a Message object
 		err := ws.ReadJSON(&msg)
 		if err != nil {
-			delete(clients, ws)
+			fmt.Println("deu erro")
+			delete(clientsByRoom[room], ws)
 			break
 		}
+		msg.Room = room
 		// send new message to the channel
 		broadcaster <- msg
 	}
 }
 
-func sendPreviousMessages(ws *websocket.Conn) {
-	chatMessages, err := rdb.LRange("chat_messages", 0, -1).Result()
+func sendPreviousMessages(ws *websocket.Conn, room string) {
+	chatMessages, err := rdb.LRange("chat_messages:"+room, 0, -1).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -93,14 +112,18 @@ func storeInRedis(msg ChatMessage) {
 		panic(err)
 	}
 
-	if err := rdb.RPush("chat_messages", json).Err(); err != nil {
+	redisKey := fmt.Sprintf("chat_messages:%s", msg.Room)
+	if err := rdb.LPush(redisKey, json).Err(); err != nil {
+		panic(err)
+	}
+	if err := rdb.Expire(redisKey, chatExpirationTime); err.Err() != nil {
 		panic(err)
 	}
 }
 
 func messageClients(msg ChatMessage) {
 	// send to every client currently connected
-	for client := range clients {
+	for client := range clientsByRoom[msg.Room] {
 		messageClient(client, msg)
 	}
 }
@@ -110,7 +133,8 @@ func messageClient(client *websocket.Conn, msg ChatMessage) {
 	if err != nil && unsafeError(err) {
 		log.Printf("error: %v", err)
 		client.Close()
-		delete(clients, client)
+		delete(clientsByRoom[msg.Room], client)
+
 	}
 }
 
@@ -124,14 +148,14 @@ func main() {
 	}
 
 	port := os.Getenv("PORT")
-	redisURL := os.Getenv("REDIS_URL")
-
-	rdb = redis.NewClient(&redis.Options{
-		Addr: redisURL,
-	})
+	initRedis()
 
 	http.Handle("/", http.FileServer(http.Dir("./public")))
 	http.HandleFunc("/websocket", handleConnections)
+
+	// create a map to store the clients for each room
+	clientsByRoom = make(map[string]map[*websocket.Conn]bool)
+
 	go handleMessages()
 
 	log.Print("Server starting at localhost:" + port)
@@ -139,4 +163,12 @@ func main() {
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func initRedis() {
+	redisURL := os.Getenv("REDIS_URL")
+
+	rdb = redis.NewClient(&redis.Options{
+		Addr: redisURL,
+	})
 }
