@@ -11,6 +11,9 @@ type Environment struct {
 	Port                   string `env:"PORT"`
 	RedisURL               string `env:"REDIS_URL"`
 	RedisExpirationMinutes int    `env:"REDIS_EXPIRE_MINUTES"`
+	MaxRooms               int    `env:"MAX_ROOMS"`
+	MaxClientsPerRoom      int    `env:"MAX_CLIENTS_PER_ROOM"`
+	MaxMessagesPerRoom     int    `env:"MAX_MESSAGES_PER_ROOM"`
 }
 
 var ENV Environment

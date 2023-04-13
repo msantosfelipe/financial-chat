@@ -22,9 +22,9 @@ func GetInstance() WebsocketService {
 }
 
 type websocketService struct {
-	UsersByRoom  map[string]map[*websocket.Conn]bool
-	Broadcaster  chan ChatMessage
-	Upgrader     websocket.Upgrader
+	usersByRoom  map[string]map[*websocket.Conn]bool
+	broadcaster  chan ChatMessage
+	upgrader     websocket.Upgrader
 	cacheService cache.CacheService
 }
 
@@ -48,12 +48,12 @@ type connRegister interface {
 }
 
 type userRegister interface {
-	AddUserToRoom(wsConn *websocket.Conn, room string)
+	AddUserToRoom(wsConn *websocket.Conn, room string) error
 }
 
 type MessageSender interface {
 	SendPreviousCachedMessages(wsConn *websocket.Conn, room string)
-	ListenToAndSendMessage(wsConn *websocket.Conn, room string)
+	ListenAndSendMessage(wsConn *websocket.Conn, room string)
 }
 
 type MessageReceiver interface {

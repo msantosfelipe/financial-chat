@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/msantosfelipe/financial-chat/app"
 )
 
 var (
@@ -52,6 +53,15 @@ func (s *redisService) StoreChatMessage(message []byte, room string) {
 		log.Println(fmt.Sprintf("cache: error setting expiration time for message of room %s - all messages will be deleted :", room), err)
 		if err := s.client.Del(redisKey); err != nil {
 			log.Println(fmt.Sprintf("cache: error deleting message of room %s :", room), err)
+		}
+	}
+}
+
+func (s *redisService) HandleChatSize(room string) {
+	numberOfMessages := len(s.GetPreviousChatMessages(room))
+	if numberOfMessages >= app.ENV.MaxMessagesPerRoom {
+		if err := s.client.LTrim(getChatKey(room), 1, int64(numberOfMessages)).Err(); err != nil {
+			log.Println(fmt.Sprintf("cache: error deleting max message of room %s :", room), err)
 		}
 	}
 }

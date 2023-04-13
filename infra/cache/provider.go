@@ -30,6 +30,7 @@ type CacheService interface {
 type cacheChecker interface {
 	ExistsChatKey(room string) bool
 	GetPreviousChatMessages(room string) []string
+	HandleChatSize(room string)
 }
 
 type cacheSetter interface {
