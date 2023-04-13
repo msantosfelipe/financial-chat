@@ -16,5 +16,4 @@ This application allows several users to talk in a chatroom and also to get stoc
     - `make test`
 
 // TODO
-- put room limit, clients per room limit and messages per room limit
 - implement bot

@@ -58,9 +58,10 @@ func (s *redisService) StoreChatMessage(message []byte, room string) {
 }
 
 func (s *redisService) HandleChatSize(room string) {
-	numberOfMessages := len(s.GetPreviousChatMessages(room))
+	chatMessages := s.GetPreviousChatMessages(room)
+	numberOfMessages := len(chatMessages)
 	if numberOfMessages >= app.ENV.MaxMessagesPerRoom {
-		if err := s.client.LTrim(getChatKey(room), 1, int64(numberOfMessages)).Err(); err != nil {
+		if err := s.client.LRem(getChatKey(room), 1, chatMessages[0]).Err(); err != nil {
 			log.Println(fmt.Sprintf("cache: error deleting max message of room %s :", room), err)
 		}
 	}

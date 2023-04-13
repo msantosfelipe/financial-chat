@@ -1,6 +1,9 @@
 $(function () {
+    const maxMessages = 50
+
     let websocket;
     let room;
+    let messageCounter = 0
 
     $("#input-form").on("submit", function (event) {
         event.preventDefault();
@@ -17,6 +20,10 @@ $(function () {
                 let chatContent = `<p><strong>${data.timestamp} - ${data.username}</strong>: ${data.text}</p>`;
                 chatText.append(chatContent);
                 chatText.scrollTop = chatText.scrollHeight;
+                messageCounter++
+                if (messageCounter > maxMessages) {
+                    $("#chat-text p:first-of-type").remove();
+                }
             });
 
             // disable inputs

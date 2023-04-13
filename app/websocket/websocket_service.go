@@ -80,7 +80,7 @@ func (w *websocketService) HandleReceivedMessages() {
 		// grab any next message from channel
 		msg := <-w.broadcaster
 
-		w.storeInRedis(msg)
+		w.cacheMessage(msg)
 		w.messageClients(msg)
 	}
 }
@@ -90,7 +90,7 @@ func (w *websocketService) Clean() {
 	close(w.broadcaster)
 }
 
-func (w *websocketService) storeInRedis(msg ChatMessage) {
+func (w *websocketService) cacheMessage(msg ChatMessage) {
 	w.cacheService.HandleChatSize(msg.Room)
 
 	json, err := json.Marshal(msg)
