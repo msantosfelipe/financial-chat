@@ -15,7 +15,7 @@ func GetInstance() CacheService {
 	once.Do(func() {
 		host := app.ENV.RedisURL
 		log.Println("Creating redis service, host:", host)
-		instance = NewRedis(
+		instance = New(
 			host,
 			time.Duration(app.ENV.RedisExpirationMinutes)*time.Minute)
 	})

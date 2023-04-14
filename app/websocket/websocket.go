@@ -1,11 +1,11 @@
 package websocket
 
 import (
-	"log"
 	"net/http"
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/msantosfelipe/financial-chat/infra/amqp"
 	"github.com/msantosfelipe/financial-chat/infra/cache"
 )
 
@@ -14,7 +14,6 @@ var once sync.Once
 
 func GetInstance() WebsocketService {
 	once.Do(func() {
-		log.Println("Creating websocket instance")
 		instance = New()
 	})
 
@@ -26,6 +25,7 @@ type websocketService struct {
 	broadcaster  chan ChatMessage
 	upgrader     websocket.Upgrader
 	cacheService cache.CacheService
+	amqpService  amqp.AmqpService
 }
 
 type ChatMessage struct {
@@ -33,6 +33,11 @@ type ChatMessage struct {
 	Text      string `json:"text"`
 	Timestamp string `json:"timestamp"`
 	Room      string `json:"room"`
+}
+
+type QueueMessage struct {
+	Text string `json:"text"`
+	Room string `json:"room"`
 }
 
 type WebsocketService interface {
@@ -54,6 +59,8 @@ type userRegister interface {
 type MessageSender interface {
 	SendPreviousCachedMessages(wsConn *websocket.Conn, room string)
 	ListenAndSendMessage(wsConn *websocket.Conn, room string)
+	SendBotMessage(botUser, room, text string)
+	PublishMessageToQueue(msg QueueMessage)
 }
 
 type MessageReceiver interface {

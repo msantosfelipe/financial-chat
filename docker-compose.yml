@@ -1,11 +1,30 @@
-version: '3'
+version: "3.2"
 
 services:
-  #  start Redis, and ensure that data is stored to a mounted volume
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672 # RabbitMQ GUI
+    # volumes:
+    #   - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/:rw
+    #   - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq:rw
+    restart: always
+    networks:
+      - dev-network
+
   redis:
     image: 'redis:alpine'
+    container_name: 'redis'
     ports:
       - "6379:6379"
     restart: always
     volumes:
-      - ./db-data/redis/:/data
+      - ./docker-data/redis/:/data
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge

@@ -6,9 +6,9 @@ This application allows several users to talk in a chatroom and also to get stoc
 
 ## Commands
 - How to run:
-    - To run you must have docker installed
-    - `docker-compose up -d`
-    - `make start` or `go run .`
+    - To run you must have docker installed, run `docker-compose up -d`
+    - With make: `make start`
+    - Whitout make: `docker-compose up -d` and `go run .`
     - Access `http://localhost:8081`
 - How to stop:
     - `make stop`

@@ -14,6 +14,9 @@ type Environment struct {
 	MaxRooms               int    `env:"MAX_ROOMS"`
 	MaxClientsPerRoom      int    `env:"MAX_CLIENTS_PER_ROOM"`
 	MaxMessagesPerRoom     int    `env:"MAX_MESSAGES_PER_ROOM"`
+	AmqpServerURL          string `env:"AMQP_SERVER_URL"`
+	AmqpChatQueueName      string `env:"AMQP_CHAT_QUEUE_NAME"`
+	StockApiURL            string `env:"STOCK_API_URL"`
 }
 
 var ENV Environment

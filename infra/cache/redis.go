@@ -18,11 +18,13 @@ type redisService struct {
 	expire time.Duration
 }
 
-func NewRedis(host string, expire time.Duration) CacheService {
+func New(host string, expire time.Duration) CacheService {
 	client := redis.NewClient(&redis.Options{
 		Addr: host,
 	})
-	log.Println("redis ping:", client.Ping())
+	if err := client.Ping().Err(); err != nil {
+		log.Println("error on redis connection: ", err)
+	}
 
 	return &redisService{
 		client: client,

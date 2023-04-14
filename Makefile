@@ -1,5 +1,13 @@
 BINARY_NAME=financial-chat
 
+## run docker-compose
+infra-up:
+	docker-compose up -d
+
+## stop docker-compose
+infra-down:
+	docker-compose down
+
 ## build: Build binary
 build:
 	@echo "Building..."

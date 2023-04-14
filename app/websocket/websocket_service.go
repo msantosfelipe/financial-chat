@@ -6,12 +6,16 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/msantosfelipe/financial-chat/app"
+	"github.com/msantosfelipe/financial-chat/infra/amqp"
 	"github.com/msantosfelipe/financial-chat/infra/cache"
 )
+
+const botMsgPrefix = "/"
 
 func New() WebsocketService {
 	return &websocketService{
@@ -23,6 +27,7 @@ func New() WebsocketService {
 			},
 		},
 		cacheService: cache.GetInstance(),
+		amqpService:  amqp.GetInstance(),
 	}
 }
 
@@ -68,10 +73,39 @@ func (w *websocketService) ListenAndSendMessage(wsConn *websocket.Conn, room str
 			break
 		}
 
+		if strings.HasPrefix(msg.Text, botMsgPrefix) {
+			w.PublishMessageToQueue(QueueMessage{
+				Text: msg.Text,
+				Room: msg.Room,
+			})
+			continue
+		}
+
 		msg.Room = room
 		msg.Timestamp = time.Now().Format("2006-01-02 15:04:05")
 
 		w.broadcaster <- msg
+	}
+}
+
+func (w *websocketService) SendBotMessage(botUser, room, text string) {
+	msg := ChatMessage{
+		Username:  botUser,
+		Room:      room,
+		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+		Text:      text,
+	}
+
+	w.broadcaster <- msg
+}
+
+func (w *websocketService) PublishMessageToQueue(msg QueueMessage) {
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println("error marshaling message: ", err)
+	}
+	if err := w.amqpService.PublishMessage(bytes, app.ENV.AmqpChatQueueName); err != nil {
+		log.Println("error sending message: ", err)
 	}
 }
 
@@ -86,7 +120,6 @@ func (w *websocketService) HandleReceivedMessages() {
 }
 
 func (w *websocketService) Clean() {
-	log.Println("closing ws channel...")
 	close(w.broadcaster)
 }
 

@@ -13,3 +13,5 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/subosito/gotenv v1.4.2
 )
+
+require github.com/rabbitmq/amqp091-go v1.8.0
