@@ -42,10 +42,12 @@ func (w *websocketService) RegisterWSConnection(rw http.ResponseWriter, r *http.
 	if err != nil {
 		log.Fatal("error creating new websocket connection: ", err)
 	}
+
 	return wsConn
 }
 
 func (w *websocketService) AddUserToRoom(wsConn *websocket.Conn, room string) error {
+	w.mutex.Lock()
 	usersInRoom, err := w.getUsersInRoom(room)
 	if err != nil {
 		return err
@@ -53,6 +55,7 @@ func (w *websocketService) AddUserToRoom(wsConn *websocket.Conn, room string) er
 
 	usersInRoom[wsConn] = true
 	w.usersByRoom[room] = usersInRoom
+	w.mutex.Unlock()
 	return nil
 }
 
@@ -113,8 +116,10 @@ func (w *websocketService) PublishMessageToQueue(msg []byte, queue string) error
 
 func (w *websocketService) HandleReceivedMessages() {
 	for {
-		// grab any next message from channel
-		msg := <-w.broadcaster
+		msg, ok := <-w.broadcaster
+		if !ok {
+			return
+		}
 
 		w.cacheMessage(msg)
 		w.messageClients(msg)
@@ -137,10 +142,11 @@ func (w *websocketService) cacheMessage(msg ChatMessage) {
 }
 
 func (w *websocketService) messageClients(msg ChatMessage) {
-	// send to every client currently connected
+	w.mutex.Lock()
 	for wsConn := range w.usersByRoom[msg.Room] {
 		w.messageClient(wsConn, msg)
 	}
+	w.mutex.Unlock()
 }
 
 func (w *websocketService) messageClient(wsConn *websocket.Conn, msg ChatMessage) {

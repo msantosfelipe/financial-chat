@@ -26,6 +26,7 @@ type websocketService struct {
 	upgrader     websocket.Upgrader
 	cacheService cache.CacheService
 	amqpService  amqp.AmqpService
+	mutex        sync.Mutex
 }
 
 type ChatMessage struct {

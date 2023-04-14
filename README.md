@@ -1,17 +1,33 @@
 # financial-chat
 
-Simple browser-based chat application using Go
+A simple chat application built with Go, Gorilla Websockets, and a simple html/js.
 
-This application allows several users to talk in a chatroom and also to get stock quotes from an API using the specific command `/stock=stock_code`
+# Features
+- Real-time chat messaging
+- Multiple chat rooms
+- Server-side stock quotes
+    - Use the command `/stock=stock_code` (eg: `/stock=aapl.us`)
 
-## Commands
-- How to run:
-    - To run you must have docker installed, run `docker-compose up -d`
-    - With make: `make start`
-    - Whitout make: `docker-compose up -d` and `go run .`
-    - Access `http://localhost:8081`
+# Prerequisites
+To run the application, you need the following:
+- Go 1.20 or higher
+- Docker
+
+## Usage
+1. Start docker containers:
+    - `docker-compose up -d`
+2. Run
+- With make:
+    - `make start`
+- Whitout make: 
+    - `go run .`
+
+3. Open a web browser and go to `http://localhost:8081`
+4. Enter a username and a room name, and start chatting!
+
 - How to stop:
     - `make stop`
+    - `docker-compose down`
 - How to run tests:
     - `make test`
 

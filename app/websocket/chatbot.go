@@ -23,19 +23,9 @@ type chatbotService struct {
 
 type ChatbotService interface {
 	messageHandler
-	// queueSubscriber
-	// serviceCleaner
 }
 
 type messageHandler interface {
 	HandleBotMessage(text, room string)
 	StockHandler(stock, room string) error
-}
-
-type queueSubscriber interface {
-	SubscribeToQueue(queue string)
-}
-
-type serviceCleaner interface {
-	Clean()
 }
