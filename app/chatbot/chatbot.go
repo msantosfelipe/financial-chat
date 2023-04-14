@@ -28,7 +28,6 @@ type chatbotService struct {
 
 type ChatbotService interface {
 	queueSubscriber
-	messageHandler
 	serviceCleaner
 }
 
@@ -37,7 +36,7 @@ type queueSubscriber interface {
 }
 
 type messageHandler interface {
-	StockHandler(stockName string)
+	SendBotMessage(botUser, room, text string)
 }
 
 type serviceCleaner interface {

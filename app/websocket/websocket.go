@@ -12,7 +12,7 @@ import (
 var instance WebsocketService
 var once sync.Once
 
-func GetInstance() WebsocketService {
+func GetWSInstance() WebsocketService {
 	once.Do(func() {
 		instance = New()
 	})
@@ -59,7 +59,7 @@ type userRegister interface {
 type MessageSender interface {
 	SendPreviousCachedMessages(wsConn *websocket.Conn, room string)
 	ListenAndSendMessage(wsConn *websocket.Conn, room string)
-	SendBotMessage(botUser, room, text string)
+	SendMessage(user, room, text string)
 	PublishMessageToQueue(msg QueueMessage)
 }
 

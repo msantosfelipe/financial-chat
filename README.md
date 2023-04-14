@@ -15,5 +15,3 @@ This application allows several users to talk in a chatroom and also to get stoc
 - How to run tests:
     - `make test`
 
-// TODO
-- implement bot

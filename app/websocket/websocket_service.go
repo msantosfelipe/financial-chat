@@ -17,6 +17,12 @@ import (
 
 const botMsgPrefix = "/"
 
+var chatbot ChatbotService
+
+func init() {
+	chatbot = GetChatbotInstance()
+}
+
 func New() WebsocketService {
 	return &websocketService{
 		usersByRoom: make(map[string]map[*websocket.Conn]bool),
@@ -74,23 +80,17 @@ func (w *websocketService) ListenAndSendMessage(wsConn *websocket.Conn, room str
 		}
 
 		if strings.HasPrefix(msg.Text, botMsgPrefix) {
-			w.PublishMessageToQueue(QueueMessage{
-				Text: msg.Text,
-				Room: msg.Room,
-			})
+			chatbot.HandleBotMessage(msg.Text, room)
 			continue
 		}
 
-		msg.Room = room
-		msg.Timestamp = time.Now().Format("2006-01-02 15:04:05")
-
-		w.broadcaster <- msg
+		w.SendMessage(msg.Username, room, msg.Text)
 	}
 }
 
-func (w *websocketService) SendBotMessage(botUser, room, text string) {
+func (w *websocketService) SendMessage(user, room, text string) {
 	msg := ChatMessage{
-		Username:  botUser,
+		Username:  user,
 		Room:      room,
 		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
 		Text:      text,

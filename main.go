@@ -15,7 +15,7 @@ import (
 
 func main() {
 	// init amqp consumer (bot)
-	chabotHanler.HandleMessageConsumer()
+	// chabotHanler.HandleMessageConsumer()
 
 	// init websocket (chat)
 	http.Handle("/", http.FileServer(http.Dir("./public")))

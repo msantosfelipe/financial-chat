@@ -10,7 +10,7 @@ import (
 var ws websocket.WebsocketService
 
 func init() {
-	ws = websocket.GetInstance()
+	ws = websocket.GetWSInstance()
 	go ws.HandleReceivedMessages()
 }
 

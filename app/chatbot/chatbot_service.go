@@ -2,11 +2,9 @@ package chatbot
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"strings"
 
-	"github.com/msantosfelipe/financial-chat/app/client"
 	"github.com/msantosfelipe/financial-chat/infra/amqp"
 )
 
@@ -39,11 +37,11 @@ func (s *chatbotService) SubscribeToQueue(queue string) {
 			stock := strings.Split(queueMessage.Text, prefixStock)[1]
 			s.StockHandler(stock)
 		case strings.HasPrefix(queueMessage.Text, prefixHelp):
-			text := "*** usage: \"/stock='stock_code'\""
-			client.SendBotMessage(chatbotUser, queueMessage.Room, text)
+			// text := "*** usage: \"/stock='stock_code'\""
+			// client.SendBotMessage(chatbotUser, queueMessage.Room, text)
 		default:
-			text := fmt.Sprintf("*** invalid bot command %s", queueMessage.Text)
-			client.SendBotMessage(chatbotUser, queueMessage.Room, text)
+			// text := fmt.Sprintf("*** invalid bot command %s", queueMessage.Text)
+			// client.SendBotMessage(chatbotUser, queueMessage.Room, text)
 		}
 	}
 }
