@@ -35,9 +35,9 @@ type ChatMessage struct {
 	Room      string `json:"room"`
 }
 
-type QueueMessage struct {
-	Text string `json:"text"`
-	Room string `json:"room"`
+type QueueStockMessage struct {
+	Stock string `json:"stock"`
+	Room  string `json:"room"`
 }
 
 type WebsocketService interface {
@@ -60,7 +60,8 @@ type MessageSender interface {
 	SendPreviousCachedMessages(wsConn *websocket.Conn, room string)
 	ListenAndSendMessage(wsConn *websocket.Conn, room string)
 	SendMessage(user, room, text string)
-	PublishMessageToQueue(msg QueueMessage)
+	SendBotMessage(room, text string)
+	PublishMessageToQueue(msg []byte, queue string) error
 }
 
 type MessageReceiver interface {

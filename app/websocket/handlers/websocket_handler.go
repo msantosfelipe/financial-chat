@@ -42,6 +42,8 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 
 func Clean() {
 	log.Println("cleanning websocket tasks...")
-	ws.Clean()
+	if ws != nil {
+		ws.Clean()
+	}
 	log.Println("websocket stopped")
 }

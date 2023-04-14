@@ -17,6 +17,7 @@ type Environment struct {
 	AmqpServerURL          string `env:"AMQP_SERVER_URL"`
 	AmqpChatQueueName      string `env:"AMQP_CHAT_QUEUE_NAME"`
 	StockApiURL            string `env:"STOCK_API_URL"`
+	ChatbotUsername        string `env:"CHATBOT_USER"`
 }
 
 var ENV Environment

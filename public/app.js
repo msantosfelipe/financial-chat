@@ -25,9 +25,6 @@ $(function () {
                     $("#chat-text p:first-of-type").remove();
                 }
             });
-            websocket.addEventListener("close", (event) => {
-                alert("websocket connection closed")
-            });
 
             // disable inputs
             $("#input-username").prop('disabled', true);

@@ -99,14 +99,16 @@ func (w *websocketService) SendMessage(user, room, text string) {
 	w.broadcaster <- msg
 }
 
-func (w *websocketService) PublishMessageToQueue(msg QueueMessage) {
-	bytes, err := json.Marshal(msg)
-	if err != nil {
-		log.Println("error marshaling message: ", err)
+func (w *websocketService) SendBotMessage(room, text string) {
+	w.SendMessage(app.ENV.ChatbotUsername, room, text)
+}
+
+func (w *websocketService) PublishMessageToQueue(msg []byte, queue string) error {
+	if err := w.amqpService.PublishMessage(msg, app.ENV.AmqpChatQueueName); err != nil {
+		log.Println("error publishing message: ", err)
+		return err
 	}
-	if err := w.amqpService.PublishMessage(bytes, app.ENV.AmqpChatQueueName); err != nil {
-		log.Println("error sending message: ", err)
-	}
+	return nil
 }
 
 func (w *websocketService) HandleReceivedMessages() {
