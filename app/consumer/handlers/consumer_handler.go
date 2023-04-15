@@ -7,20 +7,20 @@ import (
 	"github.com/msantosfelipe/financial-chat/app/consumer"
 )
 
-var stockService consumer.ConsumerService
+var consumerService consumer.ConsumerService
 
 func New() {
-	stockService = consumer.GetStockInstance()
+	consumerService = consumer.GetStockInstance()
 }
 
 func HandleMessageConsumer() {
-	stockService.SubscribeToQueue(app.ENV.AmqpChatQueueName)
+	consumerService.SubscribeToQueue(app.ENV.AmqpChatQueueName)
 }
 
 func Clean() {
 	log.Println("cleanning chatbot tasks...")
-	if stockService != nil {
-		stockService.Clean()
+	if consumerService != nil {
+		consumerService.Clean()
 	}
 	log.Println("chatbot stopped")
 }

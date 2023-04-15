@@ -37,9 +37,11 @@ type ConsumerService interface {
 }
 
 type queueSubscriber interface {
+	// Subscribe to queue and listen to new messages
 	SubscribeToQueue(queue string)
 }
 
 type serviceCleaner interface {
+	// Close connections and channels
 	Clean()
 }
