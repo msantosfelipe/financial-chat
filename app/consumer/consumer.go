@@ -1,4 +1,4 @@
-package stock
+package consumer
 
 import (
 	"sync"
@@ -7,28 +7,31 @@ import (
 	"github.com/msantosfelipe/financial-chat/infra/amqp"
 )
 
-var stockInstance StockService
-var stockOnce sync.Once
+var consumerInstance ConsumerService
+var once sync.Once
 
-type QueueStockMessage struct {
+type QueueMessage struct {
 	Stock string `json:"stock"`
 	Room  string `json:"room"`
 }
 
-func GetStockInstance() StockService {
-	stockOnce.Do(func() {
-		stockInstance = NewStock()
+func GetStockInstance() ConsumerService {
+	once.Do(func() {
+		consumerInstance = NewConsumer(
+			amqp.GetInstance(),
+			websocket.GetWSInstance(),
+		)
 	})
 
-	return stockInstance
+	return consumerInstance
 }
 
-type stockService struct {
+type consumerService struct {
 	amqpService      amqp.AmqpService
 	websocketService websocket.WebsocketService
 }
 
-type StockService interface {
+type ConsumerService interface {
 	queueSubscriber
 	serviceCleaner
 }

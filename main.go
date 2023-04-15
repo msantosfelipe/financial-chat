@@ -9,13 +9,16 @@ import (
 	"syscall"
 
 	"github.com/msantosfelipe/financial-chat/app"
-	stockHanler "github.com/msantosfelipe/financial-chat/app/stock/handlers"
+	consumerHanler "github.com/msantosfelipe/financial-chat/app/consumer/handlers"
 	wsHandler "github.com/msantosfelipe/financial-chat/app/websocket/handlers"
 )
 
 func main() {
+	consumerHanler.New()
+	wsHandler.New()
+
 	// inianlt amqp consumer (bot)
-	stockHanler.HandleMessageConsumer()
+	consumerHanler.HandleMessageConsumer()
 
 	// init websocket (chat)
 	http.Handle("/", http.FileServer(http.Dir("./public")))
@@ -38,7 +41,7 @@ func listenForShutdown() {
 
 	log.Println("cleanning before exit...")
 	wsHandler.Clean()
-	stockHanler.Clean()
+	consumerHanler.Clean()
 	log.Println("stopping application")
 	os.Exit(0)
 }

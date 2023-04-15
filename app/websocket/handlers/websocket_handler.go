@@ -9,7 +9,7 @@ import (
 
 var ws websocket.WebsocketService
 
-func init() {
+func New() {
 	ws = websocket.GetWSInstance()
 	go ws.HandleReceivedMessages()
 }

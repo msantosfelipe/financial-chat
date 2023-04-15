@@ -4,13 +4,13 @@ import (
 	"log"
 
 	"github.com/msantosfelipe/financial-chat/app"
-	"github.com/msantosfelipe/financial-chat/app/stock"
+	"github.com/msantosfelipe/financial-chat/app/consumer"
 )
 
-var stockService stock.StockService
+var stockService consumer.ConsumerService
 
-func init() {
-	stockService = stock.GetStockInstance()
+func New() {
+	stockService = consumer.GetStockInstance()
 }
 
 func HandleMessageConsumer() {

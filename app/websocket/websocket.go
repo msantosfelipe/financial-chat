@@ -14,7 +14,17 @@ var once sync.Once
 
 func GetWSInstance() WebsocketService {
 	once.Do(func() {
-		instance = New()
+		instance = NewInstance(
+			make(map[string]map[*websocket.Conn]bool),
+			make(chan ChatMessage),
+			websocket.Upgrader{
+				CheckOrigin: func(r *http.Request) bool {
+					return true
+				},
+			},
+			cache.GetInstance(),
+			amqp.GetInstance(),
+		)
 	})
 
 	return instance
@@ -47,6 +57,7 @@ type WebsocketService interface {
 	MessageSender
 	MessageReceiver
 	ServiceCleaner
+	chatbotHandler
 }
 
 type connRegister interface {
@@ -71,4 +82,9 @@ type MessageReceiver interface {
 
 type ServiceCleaner interface {
 	Clean()
+}
+
+type chatbotHandler interface {
+	HandleBotMessage(text, room string)
+	StockHandler(stock, room string) error
 }

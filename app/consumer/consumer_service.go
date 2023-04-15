@@ -1,4 +1,4 @@
-package stock
+package consumer
 
 import (
 	"encoding/csv"
@@ -18,19 +18,22 @@ import (
 const stockValueTitle = "Close"
 const invalidStock = "N/D"
 
-func NewStock() StockService {
-	return &stockService{
-		amqpService:      amqp.GetInstance(),
-		websocketService: websocket.GetWSInstance(),
+func NewConsumer(
+	amqpService amqp.AmqpService,
+	websocketService websocket.WebsocketService,
+) ConsumerService {
+	return &consumerService{
+		amqpService:      amqpService,
+		websocketService: websocketService,
 	}
 }
 
-func (s *stockService) SubscribeToQueue(queue string) {
+func (s *consumerService) SubscribeToQueue(queue string) {
 	messages := s.amqpService.SubscribeToQueue(queue)
 
 	go func() {
 		for message := range messages {
-			var queueMessage QueueStockMessage
+			var queueMessage QueueMessage
 			log.Printf(" > Received message: %s\n", message.Body)
 			if err := json.Unmarshal(message.Body, &queueMessage); err != nil {
 				msg := fmt.Sprintf("*** error: %v", err)
@@ -55,7 +58,7 @@ func (s *stockService) SubscribeToQueue(queue string) {
 	}()
 }
 
-func (s *stockService) Clean() {
+func (s *consumerService) Clean() {
 	s.amqpService.Clean()
 }
 

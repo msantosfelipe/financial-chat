@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -15,25 +16,25 @@ import (
 	"github.com/msantosfelipe/financial-chat/infra/cache"
 )
 
-const botMsgPrefix = "/"
+const (
+	botMsgPrefix = "/"
+	prefixStock  = "/stock="
+	prefixHelp   = "/help"
+)
 
-var chatbot ChatbotService
-
-func init() {
-	chatbot = GetChatbotInstance()
-}
-
-func New() WebsocketService {
+func NewInstance(
+	usersByRoom map[string]map[*websocket.Conn]bool,
+	broadcaster chan ChatMessage,
+	upgrader websocket.Upgrader,
+	cacheService cache.CacheService,
+	amqpService amqp.AmqpService,
+) WebsocketService {
 	return &websocketService{
-		usersByRoom: make(map[string]map[*websocket.Conn]bool),
-		broadcaster: make(chan ChatMessage),
-		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true
-			},
-		},
-		cacheService: cache.GetInstance(),
-		amqpService:  amqp.GetInstance(),
+		usersByRoom:  usersByRoom,
+		broadcaster:  broadcaster,
+		upgrader:     upgrader,
+		cacheService: cacheService,
+		amqpService:  amqpService,
 	}
 }
 
@@ -83,7 +84,7 @@ func (w *websocketService) ListenAndSendMessage(wsConn *websocket.Conn, room str
 		}
 
 		if strings.HasPrefix(msg.Text, botMsgPrefix) {
-			chatbot.HandleBotMessage(msg.Text, room)
+			w.HandleBotMessage(msg.Text, room)
 			continue
 		}
 
@@ -128,6 +129,45 @@ func (w *websocketService) HandleReceivedMessages() {
 
 func (w *websocketService) Clean() {
 	close(w.broadcaster)
+}
+
+func (w *websocketService) HandleBotMessage(text, room string) {
+	switch {
+	case strings.HasPrefix(text, prefixStock):
+		err := w.StockHandler(text, room)
+		if err != nil {
+			msg := fmt.Sprintf("*** error: %v", err)
+			w.SendBotMessage(room, msg)
+		}
+	case strings.HasPrefix(text, prefixHelp):
+		msg := "*** usage: \"/stock='stock_code'\""
+		w.SendBotMessage(room, msg)
+	default:
+		msg := fmt.Sprintf("*** invalid command %s", text)
+		w.SendBotMessage(room, msg)
+	}
+}
+
+func (w *websocketService) StockHandler(text, room string) error {
+	if len(strings.Split(text, prefixStock)) == 1 {
+		return fmt.Errorf("invalid stock name %s", text)
+	}
+
+	stock := strings.ToUpper(strings.Split(text, prefixStock)[1])
+
+	bytes, err := json.Marshal(QueueStockMessage{
+		Stock: stock,
+		Room:  room,
+	})
+	if err != nil {
+		log.Println("error marshaling message: ", err)
+	}
+
+	if err := w.PublishMessageToQueue(bytes, app.ENV.AmqpChatQueueName); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (w *websocketService) cacheMessage(msg ChatMessage) {
