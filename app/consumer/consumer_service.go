@@ -36,20 +36,23 @@ func (s *consumerService) SubscribeToQueue(queue string) {
 			var queueMessage QueueMessage
 			log.Printf(" > Received message: %s\n", message.Body)
 			if err := json.Unmarshal(message.Body, &queueMessage); err != nil {
-				msg := fmt.Sprintf("*** error: %v", err)
+				msg := fmt.Sprintf("error: %v", err)
 				s.websocketService.SendBotMessage(queueMessage.Room, msg)
+				continue
 			}
 
 			csvResponse, err := requestStockAPI(queueMessage.Stock)
 			if err != nil {
-				msg := fmt.Sprintf("*** error: %v", err)
+				msg := fmt.Sprintf("error: %v", err)
 				s.websocketService.SendBotMessage(queueMessage.Room, msg)
+				continue
 			}
 
 			stockValue, err := parseCsvResponse(csvResponse, queueMessage.Stock)
 			if err != nil {
-				msg := fmt.Sprintf("*** error: %v", err)
+				msg := fmt.Sprintf("error: %v", err)
 				s.websocketService.SendBotMessage(queueMessage.Room, msg)
+				continue
 			}
 
 			msg := fmt.Sprintf("%s quote is $%v per share.", queueMessage.Stock, stockValue)
@@ -77,7 +80,7 @@ func parseCsvResponse(csvResponse [][]string, stock string) (float64, error) {
 			for indexRow, column := range row {
 				if indexRow == valueIndex {
 					if column == invalidStock {
-						return 0, fmt.Errorf("could not get values for %s", stock)
+						return 0, fmt.Errorf("could not get values for stock %s", stock)
 					}
 					value, err := strconv.ParseFloat(column, 64)
 					if err != nil {

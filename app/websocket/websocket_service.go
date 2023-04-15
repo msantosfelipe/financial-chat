@@ -104,6 +104,7 @@ func (w *websocketService) SendMessage(user, room, text string) {
 }
 
 func (w *websocketService) SendBotMessage(room, text string) {
+	text = fmt.Sprintf("*** %s", text)
 	w.SendMessage(app.ENV.ChatbotUsername, room, text)
 }
 
@@ -136,14 +137,14 @@ func (w *websocketService) HandleBotMessage(text, room string) {
 	case strings.HasPrefix(text, prefixStock):
 		err := w.StockHandler(text, room)
 		if err != nil {
-			msg := fmt.Sprintf("*** error: %v", err)
+			msg := fmt.Sprintf("error: %v", err)
 			w.SendBotMessage(room, msg)
 		}
 	case strings.HasPrefix(text, prefixHelp):
-		msg := "*** usage: \"/stock='stock_code'\""
+		msg := "usage: \"/stock='stock_code'\""
 		w.SendBotMessage(room, msg)
 	default:
-		msg := fmt.Sprintf("*** invalid command %s", text)
+		msg := fmt.Sprintf("invalid command %s", text)
 		w.SendBotMessage(room, msg)
 	}
 }
@@ -154,6 +155,9 @@ func (w *websocketService) StockHandler(text, room string) error {
 	}
 
 	stock := strings.ToUpper(strings.Split(text, prefixStock)[1])
+	if stock == "" {
+		return fmt.Errorf("input a stock name")
+	}
 
 	bytes, err := json.Marshal(QueueStockMessage{
 		Stock: stock,

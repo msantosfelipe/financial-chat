@@ -5,6 +5,7 @@ A simple chat application built with Go with Gorilla Websockets and HTML/JS.
 # Features
 - Real-time chat messaging
 - Multiple chat rooms (create a new window and connect using a different room name)
+- Store messages in cache and load old messages when a new user enter the room
 - Bot commands
     - Type `/help` in chat
 - Server-side stock quotes
